@@ -1,13 +1,13 @@
 package main
 
 import (
-	"do-mall/routers"
 	"fmt"
+	"gin-init/routers"
 	"github.com/fvbock/endless"
 	"log"
 	"syscall"
 
-	"do-mall/pkg/setting"
+	"gin-init/pkg/setting"
 )
 
 func main() {

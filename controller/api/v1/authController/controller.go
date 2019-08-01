@@ -1,10 +1,10 @@
 package authController
 
 import (
-	"do-mall/models"
-	"do-mall/pkg/e"
-	"do-mall/pkg/logging"
-	"do-mall/pkg/util"
+	"gin-init/models/Auth"
+	"gin-init/pkg/e"
+	"gin-init/pkg/logging"
+	"gin-init/pkg/util"
 	"github.com/astaxie/beego/validation"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -16,30 +16,29 @@ type auth struct {
 }
 
 func GetAuth(c *gin.Context) {
-	username := c.Query("username")
-	password := c.Query("password")
+	msg := ""
+	mobile := c.PostForm("mobile")
+	password := c.PostForm("password")
 
 	valid := validation.Validation{}
-	a := auth{Username: username, Password: password}
+	a := auth{Username: mobile, Password: password}
 	ok, _ := valid.Valid(&a)
 
 	data := make(map[string]interface{})
-	code := e.INVALID_PARAMS
+	code := e.BAD_REQUEST
 	if ok {
-		isExist := models.CheckAuth(username, password)
-		if isExist {
-			token, err := util.GenerateToken(username, password)
-			if err != nil {
-				code = e.ERROR_AUTH_TOKEN
-			} else {
+		id := Auth.CheckAndReturnId(mobile, password)
+		if id > 0 {
+			token, err := util.GenerateToken(id)
+			if err == nil {
+				code = e.CREATED
 				data["token"] = token
-
-				code = e.SUCCESS
 			}
-
 		} else {
-			code = e.ERROR_AUTH
+			code = e.UNAUTHORIZED
+			msg = "用户名或密码错误"
 		}
+
 	} else {
 		for _, err := range valid.Errors {
 			logging.Info(err.Key, err.Message)
@@ -48,7 +47,7 @@ func GetAuth(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"code" : code,
-		"msg" : e.GetMsg(code),
+		"msg" : msg,
 		"data" : data,
 	})
 }

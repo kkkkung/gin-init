@@ -1,12 +1,13 @@
-package models
+package Tag
 
 import (
+	"gin-init/models"
 	"github.com/jinzhu/gorm"
 	"time"
 )
 
 type Tag struct {
-	Model
+	models.Model
 
 	Name string `json:"name"`
 	CreatedBy string `json:"created_by"`
@@ -15,20 +16,20 @@ type Tag struct {
 }
 
 func GetTags(pageNum int, pageSize int, maps interface {}) (tags []Tag) {
-	db.Where(maps).Offset(pageNum).Limit(pageSize).Find(&tags)
+	models.Db.Where(maps).Offset(pageNum).Limit(pageSize).Find(&tags)
 
 	return
 }
 
 func GetTagTotal(maps interface {}) (count int){
-	db.Model(&Tag{}).Where(maps).Count(&count)
+	models.Db.Model(&Tag{}).Where(maps).Count(&count)
 
 	return
 }
 
 func ExistTagByName(name string) bool {
 	var tag Tag
-	db.Select("id").Where("name = ?", name).First(&tag)
+	models.Db.Select("id").Where("name = ?", name).First(&tag)
 	if tag.ID > 0 {
 		return true
 	}
@@ -37,7 +38,7 @@ func ExistTagByName(name string) bool {
 }
 
 func AddTag(name string, state int, createdBy string) bool{
-	db.Create(&Tag {
+	models.Db.Create(&Tag {
 		Name : name,
 		State : state,
 		CreatedBy : createdBy,

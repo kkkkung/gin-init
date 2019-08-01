@@ -1,7 +1,9 @@
 package util
 
 import (
-	"do-mall/pkg/setting"
+	"gin-init/models/Admin"
+	"gin-init/models/User"
+	"gin-init/pkg/setting"
 	"github.com/dgrijalva/jwt-go"
 	"time"
 )
@@ -9,21 +11,42 @@ import (
 var jwtSecret = []byte(setting.JwtSecret)
 
 type Claims struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
+	User User.User
 	jwt.StandardClaims
 }
 
-func GenerateToken(username, password string) (string, error) {
+type AdminClaims struct {
+	User Admin.Admin
+	jwt.StandardClaims
+}
+
+func GenerateToken(id int) (string, error) {
 	nowTime := time.Now()
 	expireTime := nowTime.Add(3 * time.Hour)
-
+	user := User.GetInfo(id)
 	claims := Claims{
-		username,
-		password,
-		jwt.StandardClaims {
-			ExpiresAt : expireTime.Unix(),
-			Issuer : "gin-blog",
+		user,
+		jwt.StandardClaims{
+			ExpiresAt: expireTime.Unix(),
+			Issuer:    "gin-init",
+		},
+	}
+
+	tokenClaims := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	token, err := tokenClaims.SignedString(jwtSecret)
+
+	return token, err
+}
+
+func GenerateAdmin(id int) (string, error) {
+	nowTime := time.Now()
+	expireTime := nowTime.Add(3 * time.Hour)
+	user := Admin.GetInfo(id)
+	claims := AdminClaims{
+		user,
+		jwt.StandardClaims{
+			ExpiresAt: expireTime.Unix(),
+			Issuer:    "gin-init",
 		},
 	}
 
@@ -40,6 +63,20 @@ func ParseToken(token string) (*Claims, error) {
 
 	if tokenClaims != nil {
 		if claims, ok := tokenClaims.Claims.(*Claims); ok && tokenClaims.Valid {
+			return claims, nil
+		}
+	}
+
+	return nil, err
+}
+
+func ParseAdmin(token string) (*AdminClaims, error) {
+	tokenClaims, err := jwt.ParseWithClaims(token, &AdminClaims{}, func(token *jwt.Token) (interface{}, error) {
+		return jwtSecret, nil
+	})
+
+	if tokenClaims != nil {
+		if claims, ok := tokenClaims.Claims.(*AdminClaims); ok && tokenClaims.Valid {
 			return claims, nil
 		}
 	}

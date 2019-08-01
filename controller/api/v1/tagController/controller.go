@@ -1,10 +1,10 @@
 package tagController
 
 import (
-	"do-mall/models"
-	"do-mall/pkg/e"
-	"do-mall/pkg/setting"
-	"do-mall/pkg/util"
+	"gin-init/models/Tag"
+	"gin-init/pkg/e"
+	"gin-init/pkg/setting"
+	"gin-init/pkg/util"
 	"github.com/Unknwon/com"
 	"github.com/astaxie/beego/validation"
 	"github.com/gin-gonic/gin"
@@ -34,10 +34,10 @@ func Get(c *gin.Context) {
 		maps["state"] = state
 	}
 
-	code := e.SUCCESS
+	code := e.OK
 
-	data["lists"] = models.GetTags(util.GetPage(c), setting.PageSize, maps)
-	data["total"] = models.GetTagTotal(maps)
+	data["lists"] = Tag.GetTags(util.GetPage(c), setting.PageSize, maps)
+	data["total"] = Tag.GetTagTotal(maps)
 
 	c.JSON(http.StatusOK, gin.H{
 		"code" : code,
@@ -59,11 +59,11 @@ func Create(c *gin.Context) {
 	valid.MaxSize(createdBy, 100, "created_by").Message("创建人最长为100字符")
 	valid.Range(state, 0, 1, "state").Message("状态只允许0或1")
 
-	code := e.INVALID_PARAMS
+	code := e.BAD_REQUEST
 	if ! valid.HasErrors() {
-		if ! models.ExistTagByName(name) {
-			code = e.SUCCESS
-			models.AddTag(name, state, createdBy)
+		if ! Tag.ExistTagByName(name) {
+			code = e.OK
+			Tag.AddTag(name, state, createdBy)
 		} else {
 			code = e.ERROR_EXIST_TAG
 		}
